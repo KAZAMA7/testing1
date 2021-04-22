@@ -10,6 +10,7 @@ python3 -m pip install requests
 systemctl start docker
 systemctl enable docker
 docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.12.0
-docker run -d --name kibana --link elasticsearch:elasticsearch -p 5601:5601 kibana:7.12.0
-docker run -d -p 8080:8080 -p 50000:50000 -v /jenkins:/var/jenkins_home jenkins
-
+docker run -d --name grafana -p 3000:3000 grafana/grafana
+cp elgrafana.py /opt/elgrafana.py
+chmod 755 /opt/elgrafana.py
+echo "*/59 * * * * /usr/bin/python3 /opt/elgrafana.py"/etc/cron.hourly/elkuploaddaily

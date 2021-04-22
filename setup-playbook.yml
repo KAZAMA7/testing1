@@ -1,0 +1,68 @@
+hosts: dockerhost
+become: True
+tasks:
+- name: Installing docker engine on the hosts
+  yum: 
+    name: epel-release
+    state: latest
+
+- name: adding docker repo to the host
+  yum_repository:
+    name: docker-repo
+    description: docker repository to install docker engine
+    baseurl: "https://download.docker.com/linux/centos/docker-ce.repo"
+   
+
+- name: Installing docker engine on the hosts
+  yum:
+    name: 
+    - python3
+    - python3-pip
+    - yum-utils
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    state: latest
+
+- name: starting docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: starting docker container for elasticsearch
+  docker_container:
+    name: elasticsearch
+    image: elasticsearch:7.12.0
+    state: started
+    ports:
+    - "9200:9200"
+    - "9300:9300"
+    env:
+    "discovery.type=single-node"
+
+- name: starting docker container for grafana
+  docker_container:
+    name: grafana
+    image: grafana
+    state: started
+    ports:
+    - "3000:3000"
+
+- name: copying the pythonscript that fetches data
+  copy:
+    src: elgrafana.py
+    dest: /opt/elgrafana.py
+    mode: '0755'
+
+- name: creating cronjob to load data into elastic search
+  cron:
+    name: load data into elastic search
+    weekday: "*"
+    day: "*"
+    hour: "*"
+    minute: "59"
+    user: "root"
+    job: "/urs/bin/python3 /opt/elgrafana.py"
+
+
